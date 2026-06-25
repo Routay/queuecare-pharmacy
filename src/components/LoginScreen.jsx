@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Pill, Lock, ArrowRight, AlertCircle, Loader2, Store } from 'lucide-react'
 
-const API_URL = 'http://127.0.0.1:8000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export default function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState('')

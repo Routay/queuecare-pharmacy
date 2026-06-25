@@ -6,8 +6,8 @@ import StockTable from './components/StockTable'
 import AddMedicineModal from './components/AddMedicineModal'
 import LoginScreen from './components/LoginScreen'
 
-// Configuration centralisée — pointe vers le backend FastAPI partagé
-const API_URL = 'http://127.0.0.1:8000';
+// Configuration centralisée
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 const PHARMACY_ID = 1;
 
 function App() {
