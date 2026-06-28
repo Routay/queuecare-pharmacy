@@ -3,7 +3,7 @@ import { X, ArrowDownRight, ArrowUpRight } from 'lucide-react'
 export default function TransactionHistoryModal({ onClose, transactions }) {
   return (
     <div className="modal-overlay" onClick={onClose} id="transaction-modal">
-      <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '100%' }}>
+      <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '95%', width: '1200px' }}>
         <div className="modal-header">
           <h3>Historique des Mouvements</h3>
           <button className="modal-close" onClick={onClose}>

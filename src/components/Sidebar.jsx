@@ -1,4 +1,4 @@
-import { Pill, LayoutDashboard, Settings } from 'lucide-react'
+import { Pill, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 
 export default function Sidebar({ user, onLogout }) {
   return (
@@ -22,8 +22,11 @@ export default function Sidebar({ user, onLogout }) {
         </button>
       </nav>
 
-      <div className="sidebar-footer">
-        {/* L'avatar et logout sont gérés dans l'en-tête (page-header) mais on peut les garder ici si besoin, sinon on s'adapte au design médical. */}
+      <div className="sidebar-footer" style={{ marginTop: 'auto' }}>
+        <button className="nav-item btn-logout" onClick={onLogout} style={{ color: 'hsl(var(--color-danger))' }}>
+          <LogOut size={20} />
+          Déconnexion
+        </button>
       </div>
     </aside>
   )

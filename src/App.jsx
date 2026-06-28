@@ -287,26 +287,59 @@ function App() {
               
               {showNotifications && (
                 <div className="glass-panel" style={{
-                  position: 'absolute', top: '100%', right: 0, marginTop: '12px',
-                  width: '320px', zIndex: 50, padding: '1rem'
+                  position: 'absolute', top: '100%', right: 0, marginTop: '16px',
+                  width: '360px', zIndex: 100, padding: '1.25rem',
+                  boxShadow: '0 20px 40px hsla(0,0%,0%,0.5)'
                 }}>
-                  <h4 style={{ marginBottom: '1rem', color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Alertes ({alertItems.length})
-                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid hsl(var(--border-color)/0.5)', paddingBottom: '0.75rem' }}>
+                    <h4 style={{ color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '0.95rem' }}>
+                      <AlertCircle size={18} />
+                      Alertes ({alertItems.length})
+                    </h4>
+                  </div>
                   {alertItems.length > 0 ? (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
-                      {alertItems.map((item, idx) => (
-                        <li key={idx} style={{ padding: '10px', background: 'hsl(var(--color-danger)/0.1)', border: '1px solid hsl(var(--color-danger)/0.2)', borderRadius: '8px', fontSize: '0.85rem' }}>
-                          <strong>{item.name}</strong> 
-                          {item.quantity === 0 && ' est en rupture totale.'}
-                          {item.quantity > 0 && item.quantity <= item.threshold && ` a un stock faible (${item.quantity} restants).`}
-                          {isExpired(item.expirationDate) && ' est expiré !'}
-                          {isExpiringSoon(item.expirationDate) && ` expire bientôt (${item.expirationDate}).`}
-                        </li>
-                      ))}
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+                      {alertItems.map((item, idx) => {
+                        const isOut = item.quantity === 0;
+                        const isExpiredItem = isExpired(item.expirationDate);
+                        const isWarning = item.quantity > 0 && item.quantity <= item.threshold;
+                        
+                        let Icon = AlertTriangle;
+                        let colorVar = '--color-warning';
+                        if (isOut || isExpiredItem) {
+                          Icon = AlertCircle;
+                          colorVar = '--color-danger';
+                        }
+                        
+                        return (
+                          <li key={idx} style={{ 
+                            padding: '12px', 
+                            background: `hsl(var(${colorVar})/0.1)`, 
+                            borderLeft: `4px solid hsl(var(${colorVar}))`, 
+                            borderRadius: '0 8px 8px 0', 
+                            fontSize: '0.85rem',
+                            display: 'flex',
+                            gap: '10px',
+                            alignItems: 'flex-start',
+                            transition: 'all 0.2s'
+                          }}>
+                            <Icon size={16} style={{ color: `hsl(var(${colorVar}))`, flexShrink: 0, marginTop: '2px' }} />
+                            <div style={{ color: 'hsl(var(--text-secondary))', lineHeight: '1.4' }}>
+                              <strong style={{ color: 'hsl(var(--text-primary))', display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>{item.name}</strong> 
+                              {isOut && <span>⚠️ Ce produit est <strong>en rupture totale</strong>. Un réapprovisionnement urgent est requis.</span>}
+                              {isWarning && <span>Attention, le stock est <strong>critiquement bas</strong> (il ne reste que {item.quantity} unités).</span>}
+                              {isExpiredItem && <span>❌ Ce produit est <strong>périmé</strong> depuis le {item.expirationDate}. À retirer du rayon.</span>}
+                              {!isExpiredItem && isExpiringSoon(item.expirationDate) && <span>⏳ Ce produit arrive à <strong>péremption prochainement</strong> ({item.expirationDate}).</span>}
+                            </div>
+                          </li>
+                        )
+                      })}
                     </ul>
                   ) : (
-                    <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-muted))' }}>Aucune alerte critique.</p>
+                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'hsl(var(--text-muted))' }}>
+                      <AlertCircle size={32} style={{ opacity: 0.2, margin: '0 auto 10px' }} />
+                      <p style={{ fontSize: '0.85rem', margin: 0 }}>Aucune alerte critique.</p>
+                    </div>
                   )}
                 </div>
               )}
@@ -319,9 +352,6 @@ function App() {
                  <span className="user-role">{user?.role || 'Utilisateur'}</span>
                </div>
             </div>
-            <button className="btn-icon btn-logout" onClick={handleLogout} title="Déconnexion" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'hsl(var(--text-muted))', marginLeft: '1rem' }}>
-              <LogOut size={24} />
-            </button>
           </div>
         </header>
 
