@@ -288,8 +288,10 @@ function App() {
               {showNotifications && (
                 <div className="glass-panel" style={{
                   position: 'absolute', top: '100%', right: 0, marginTop: '16px',
-                  width: '360px', zIndex: 100, padding: '1.25rem',
-                  boxShadow: '0 20px 40px hsla(0,0%,0%,0.5)'
+                  width: '360px', zIndex: 1000, padding: '1.25rem',
+                  background: 'hsl(var(--bg-elevated) / 0.98)',
+                  boxShadow: '0 24px 60px hsla(0,0%,0%,0.6)',
+                  border: '1px solid hsl(var(--border-color))'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid hsl(var(--border-color)/0.5)', paddingBottom: '0.75rem' }}>
                     <h4 style={{ color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '0.95rem' }}>
