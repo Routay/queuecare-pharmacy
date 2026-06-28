@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Plus, LogOut, Bell } from 'lucide-react'
+import { Search, Plus, LogOut, Bell, History, Download } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import StatCards from './components/StatCards'
 import StockTable from './components/StockTable'
 import AddMedicineModal from './components/AddMedicineModal'
+import TransactionHistoryModal from './components/TransactionHistoryModal'
 import LoginScreen from './components/LoginScreen'
+import jsPDF from 'jspdf'
+import 'jspdf-autotable'
 
 // Configuration centralisée
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -19,6 +22,7 @@ function App() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Vérifier le token au chargement
@@ -83,18 +87,43 @@ function App() {
     }
   }, [fetchPharmacyData, token]);
 
-  const updateStock = async (medicineName, inStock) => {
+  const updateStock = async (medicineData) => {
     try {
       const res = await fetch(`${API_URL}/pharmacies/${PHARMACY_ID}/stock`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: medicineName, inStock })
+        body: JSON.stringify(medicineData)
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await fetchPharmacyData();
     } catch (err) {
       console.error("Erreur lors de la mise à jour:", err);
     }
+  };
+
+  const logTransaction = async (medicine, type, quantity) => {
+    try {
+      await fetch(`${API_URL}/pharmacies/${PHARMACY_ID}/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medicine,
+          type,
+          quantity,
+          user: user?.fullName || 'Utilisateur'
+        })
+      });
+    } catch (err) {
+      console.error("Erreur log transaction:", err);
+    }
+  };
+
+  const handleUpdateQuantity = async (item, newQuantity, type) => {
+    const diff = Math.abs(newQuantity - item.quantity);
+    if (diff > 0 && type) {
+      await logTransaction(item.name, type, diff);
+    }
+    await updateStock({ ...item, quantity: newQuantity });
   };
 
   const deleteMedicine = async (medicineName) => {
@@ -110,10 +139,50 @@ function App() {
     }
   };
 
-  const handleAddMedicine = async (name, inStock) => {
-    await updateStock(name, inStock);
+  const handleAddMedicine = async (newMedicine) => {
+    await updateStock(newMedicine);
+    await logTransaction(newMedicine.name, 'ENTREE', newMedicine.quantity);
     setShowAddModal(false);
   };
+
+  const handleExportPDF = () => {
+    if (!pharmacy) return;
+    const doc = new jsPDF()
+    
+    doc.setFontSize(18)
+    doc.setTextColor(33, 37, 41)
+    doc.text(`Inventaire - ${pharmacy.name}`, 14, 22)
+    
+    doc.setFontSize(11)
+    doc.setTextColor(100)
+    doc.text(`Généré le : ${new Date().toLocaleString('fr-FR')}`, 14, 30)
+
+    const tableColumn = ["Médicament", "Catégorie", "Qté", "Seuil", "Péremption"]
+    const tableRows = []
+
+    const stockList = pharmacy.stock || [];
+    stockList.forEach(entry => {
+      const rowData = [
+        entry.name,
+        entry.category || 'Général',
+        entry.quantity.toString(),
+        entry.threshold.toString(),
+        entry.expirationDate !== '2099-12-31' ? entry.expirationDate : 'N/A'
+      ]
+      tableRows.push(rowData)
+    })
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      theme: 'grid',
+      headStyles: { fillColor: [34, 197, 94] },
+      styles: { fontSize: 9 }
+    })
+
+    doc.save(`Inventaire_${pharmacy.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`)
+  }
 
   // --- Render ---
 
@@ -141,9 +210,29 @@ function App() {
   }
 
   const stock = pharmacy.stock || [];
-  const outOfStockItems = stock.filter(item => !item.inStock);
+  
+  const isExpiringSoon = (dateString) => {
+    if (!dateString || dateString === '2099-12-31') return false;
+    const exp = new Date(dateString);
+    const now = new Date();
+    const diff = exp - now;
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return days <= 60 && days > 0;
+  };
+  const isExpired = (dateString) => {
+    if (!dateString || dateString === '2099-12-31') return false;
+    return new Date(dateString) < new Date();
+  };
+
+  const alertItems = stock.filter(item => 
+    item.quantity <= item.threshold || 
+    isExpiringSoon(item.expirationDate) || 
+    isExpired(item.expirationDate)
+  );
+
   const filteredStock = stock.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.category && item.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -154,9 +243,28 @@ function App() {
         <header className="page-header">
           <div className="header-info">
             <h1 className="page-title">{pharmacy.name}</h1>
-            <p className="page-subtitle">{pharmacy.address} • Gestion des stocks</p>
+            <p className="page-subtitle">{pharmacy.address} • ERP Pharmaceutique</p>
           </div>
           <div className="header-actions">
+            
+            <button 
+              className="btn-icon" 
+              onClick={() => setShowHistoryModal(true)}
+              title="Historique des mouvements"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'hsl(var(--text-primary))' }}
+            >
+              <History size={24} />
+            </button>
+
+            <button 
+              className="btn-icon" 
+              onClick={handleExportPDF}
+              title="Exporter l'inventaire (PDF)"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'hsl(var(--text-primary))' }}
+            >
+              <Download size={24} />
+            </button>
+
             {/* Notification Bell */}
             <div className="notification-wrapper" style={{ position: 'relative', marginRight: '1rem' }}>
               <button 
@@ -166,13 +274,13 @@ function App() {
                 style={{ position: 'relative', background: 'transparent', border: 'none', cursor: 'pointer', color: 'hsl(var(--text-primary))' }}
               >
                 <Bell size={24} />
-                {outOfStockItems.length > 0 && (
+                {alertItems.length > 0 && (
                   <span className="notification-badge" style={{
                     position: 'absolute', top: -5, right: -5, 
                     background: 'hsl(var(--color-danger))', color: 'white', 
                     borderRadius: '50%', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold'
                   }}>
-                    {outOfStockItems.length}
+                    {alertItems.length}
                   </span>
                 )}
               </button>
@@ -183,18 +291,22 @@ function App() {
                   width: '320px', zIndex: 50, padding: '1rem'
                 }}>
                   <h4 style={{ marginBottom: '1rem', color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Alertes de Stock ({outOfStockItems.length})
+                    Alertes ({alertItems.length})
                   </h4>
-                  {outOfStockItems.length > 0 ? (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {outOfStockItems.map((item, idx) => (
+                  {alertItems.length > 0 ? (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                      {alertItems.map((item, idx) => (
                         <li key={idx} style={{ padding: '10px', background: 'hsl(var(--color-danger)/0.1)', border: '1px solid hsl(var(--color-danger)/0.2)', borderRadius: '8px', fontSize: '0.85rem' }}>
-                          <strong>{item.name}</strong> est actuellement en rupture de stock.
+                          <strong>{item.name}</strong> 
+                          {item.quantity === 0 && ' est en rupture totale.'}
+                          {item.quantity > 0 && item.quantity <= item.threshold && ` a un stock faible (${item.quantity} restants).`}
+                          {isExpired(item.expirationDate) && ' est expiré !'}
+                          {isExpiringSoon(item.expirationDate) && ` expire bientôt (${item.expirationDate}).`}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-muted))' }}>Aucune rupture de stock signalée.</p>
+                    <p style={{ fontSize: '0.85rem', color: 'hsl(var(--text-muted))' }}>Aucune alerte critique.</p>
                   )}
                 </div>
               )}
@@ -222,7 +334,7 @@ function App() {
             <input
               type="text"
               className="input-field"
-              placeholder="Rechercher un médicament…"
+              placeholder="Rechercher par nom ou catégorie…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               id="search-medicine"
@@ -230,13 +342,13 @@ function App() {
           </div>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)} id="btn-add-medicine">
             <Plus size={18} />
-            Ajouter un Médicament
+            Nouvelle Entrée
           </button>
         </div>
 
         <StockTable
           stock={filteredStock}
-          onToggleStock={updateStock}
+          onUpdateQuantity={handleUpdateQuantity}
           onDelete={deleteMedicine}
         />
       </main>
@@ -247,8 +359,16 @@ function App() {
           onAdd={handleAddMedicine}
         />
       )}
+
+      {showHistoryModal && (
+        <TransactionHistoryModal
+          onClose={() => setShowHistoryModal(false)}
+          transactions={pharmacy.transactions || []}
+        />
+      )}
     </div>
   )
 }
 
 export default App
+

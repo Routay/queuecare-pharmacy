@@ -1,8 +1,9 @@
-import { Pill, AlertCircle } from 'lucide-react'
+import { Pill, AlertCircle, AlertTriangle } from 'lucide-react'
 
 export default function StatCards({ stock }) {
-  const inStockCount = stock.filter(i => i.inStock).length;
-  const outOfStockCount = stock.length - inStockCount;
+  const inStockCount = stock.filter(i => i.quantity > i.threshold).length;
+  const warningCount = stock.filter(i => i.quantity <= i.threshold && i.quantity > 0).length;
+  const outOfStockCount = stock.filter(i => i.quantity === 0).length;
 
   return (
     <div className="stats-grid">
@@ -19,15 +20,23 @@ export default function StatCards({ stock }) {
           <Pill size={20} />
         </div>
         <div className="stat-value">{inStockCount}</div>
-        <div className="stat-label">En Stock</div>
+        <div className="stat-label">Stock Suffisant</div>
+      </div>
+
+      <div className={`stat-card glass-panel ${warningCount > 0 ? 'warning' : ''}`} id="stat-warning-stock">
+        <div className={`stat-icon ${warningCount > 0 ? 'warning' : ''}`}>
+          <AlertTriangle size={20} />
+        </div>
+        <div className="stat-value">{warningCount}</div>
+        <div className="stat-label">Stock Faible</div>
       </div>
       
-      <div className={`stat-card glass-panel ${outOfStockCount > 0 ? 'warning' : ''}`} id="stat-out-of-stock">
-        <div className={`stat-icon ${outOfStockCount > 0 ? 'warning' : ''}`}>
+      <div className={`stat-card glass-panel ${outOfStockCount > 0 ? 'danger' : ''}`} id="stat-out-of-stock">
+        <div className={`stat-icon ${outOfStockCount > 0 ? 'danger' : ''}`}>
           <AlertCircle size={20} />
         </div>
         <div className="stat-value">{outOfStockCount}</div>
-        <div className="stat-label">Ruptures de stock</div>
+        <div className="stat-label">Ruptures</div>
       </div>
     </div>
   )
