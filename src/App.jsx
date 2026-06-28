@@ -5,6 +5,7 @@ import StatCards from './components/StatCards'
 import StockTable from './components/StockTable'
 import AddMedicineModal from './components/AddMedicineModal'
 import TransactionHistoryModal from './components/TransactionHistoryModal'
+import PrescriptionsPanel from './components/PrescriptionsPanel'
 import LoginScreen from './components/LoginScreen'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
@@ -24,6 +25,7 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [activeTab, setActiveTab] = useState('stock');
 
   // Vérifier le token au chargement
   useEffect(() => {
@@ -237,7 +239,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar user={user} onLogout={handleLogout} />
+      <Sidebar user={user} onLogout={handleLogout} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="main-content">
         <header className="page-header">
@@ -295,32 +297,37 @@ function App() {
           </div>
         </header>
 
-        <StatCards stock={stock} />
-
-        {/* Barre d'actions : Recherche + Ajout */}
-        <div className="glass-panel action-bar" id="action-bar">
-          <div className="search-wrapper">
-            <Search size={20} className="search-icon text-muted" />
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Rechercher par nom ou catégorie…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              id="search-medicine"
-            />
-          </div>
+        {activeTab === 'stock' && (
+          <>
+            <StatCards stock={stock} />
+            <div className="glass-panel action-bar" id="action-bar">
+              <div className="search-wrapper">
+                <Search size={20} className="search-icon text-muted" />
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Rechercher par nom ou catégorie…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  id="search-medicine"
+                />
+              </div>
               <button className="btn-premium" onClick={() => setShowAddModal(true)}>
                 <Plus size={18} />
                 Nouvelle Entrée
               </button>
-        </div>
+            </div>
+            <StockTable
+              stock={filteredStock}
+              onUpdateQuantity={handleUpdateQuantity}
+              onDelete={deleteMedicine}
+            />
+          </>
+        )}
 
-        <StockTable
-          stock={filteredStock}
-          onUpdateQuantity={handleUpdateQuantity}
-          onDelete={deleteMedicine}
-        />
+        {activeTab === 'prescriptions' && (
+          <PrescriptionsPanel user={user} onStockUpdate={fetchPharmacyData} />
+        )}
       </main>
 
       {showAddModal && (
@@ -402,4 +409,3 @@ function App() {
 }
 
 export default App
-
