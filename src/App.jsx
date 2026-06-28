@@ -286,21 +286,35 @@ function App() {
               </button>
               
               {showNotifications && (
-                <div className="glass-panel" style={{
-                  position: 'absolute', top: '100%', right: 0, marginTop: '16px',
-                  width: '360px', zIndex: 1000, padding: '1.25rem',
-                  background: 'hsl(var(--bg-elevated) / 0.98)',
-                  boxShadow: '0 24px 60px hsla(0,0%,0%,0.6)',
-                  border: '1px solid hsl(var(--border-color))'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid hsl(var(--border-color)/0.5)', paddingBottom: '0.75rem' }}>
-                    <h4 style={{ color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '0.95rem' }}>
-                      <AlertCircle size={18} />
-                      Alertes ({alertItems.length})
-                    </h4>
-                  </div>
-                  {alertItems.length > 0 ? (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+                <>
+                  {/* Overlay flou */}
+                  <div 
+                    onClick={() => setShowNotifications(false)}
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 999,
+                      background: 'hsla(0, 0%, 0%, 0.3)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)'
+                    }}
+                  />
+                  {/* Panneau de notifications */}
+                  <div className="glass-panel" style={{
+                    position: 'absolute', top: '100%', right: 0, marginTop: '16px',
+                    width: '480px', zIndex: 1000, padding: '1.5rem',
+                    background: 'hsl(var(--bg-elevated) / 0.98)',
+                    boxShadow: '0 24px 60px hsla(0,0%,0%,0.6)',
+                    border: '1px solid hsl(var(--border-color))'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid hsl(var(--border-color)/0.5)', paddingBottom: '0.75rem' }}>
+                      <h4 style={{ color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.05rem' }}>
+                        <AlertCircle size={20} />
+                        Alertes ({alertItems.length})
+                      </h4>
+                    </div>
+                    {alertItems.length > 0 ? (
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '450px', overflowY: 'auto', paddingRight: '4px' }}>
                       {alertItems.map((item, idx) => {
                         const isOut = item.quantity === 0;
                         const isExpiredItem = isExpired(item.expirationDate);
@@ -344,6 +358,7 @@ function App() {
                     </div>
                   )}
                 </div>
+                </>
               )}
             </div>
 
