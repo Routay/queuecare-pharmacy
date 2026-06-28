@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Plus, LogOut, Bell, History, Download, AlertCircle, AlertTriangle } from 'lucide-react'
+import { Search, Plus, LogOut, Bell, History, Download, AlertCircle, AlertTriangle, X } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import StatCards from './components/StatCards'
 import StockTable from './components/StockTable'
@@ -265,11 +265,10 @@ function App() {
               <Download size={24} />
             </button>
 
-            {/* Notification Bell */}
             <div className="notification-wrapper" style={{ position: 'relative', marginRight: '1rem' }}>
               <button 
                 className="btn-icon" 
-                onClick={() => setShowNotifications(!showNotifications)}
+                onClick={() => setShowNotifications(true)}
                 title="Alertes de stock"
                 style={{ position: 'relative', background: 'transparent', border: 'none', cursor: 'pointer', color: 'hsl(var(--text-primary))' }}
               >
@@ -284,82 +283,6 @@ function App() {
                   </span>
                 )}
               </button>
-              
-              {showNotifications && (
-                <>
-                  {/* Overlay flou */}
-                  <div 
-                    onClick={() => setShowNotifications(false)}
-                    style={{
-                      position: 'fixed',
-                      inset: 0,
-                      zIndex: 999,
-                      background: 'hsla(0, 0%, 0%, 0.3)',
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)'
-                    }}
-                  />
-                  {/* Panneau de notifications */}
-                  <div className="glass-panel" style={{
-                    position: 'absolute', top: '100%', right: 0, marginTop: '16px',
-                    width: '480px', zIndex: 1000, padding: '1.5rem',
-                    background: 'hsl(var(--bg-elevated) / 0.98)',
-                    boxShadow: '0 24px 60px hsla(0,0%,0%,0.6)',
-                    border: '1px solid hsl(var(--border-color))'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid hsl(var(--border-color)/0.5)', paddingBottom: '0.75rem' }}>
-                      <h4 style={{ color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.05rem' }}>
-                        <AlertCircle size={20} />
-                        Alertes ({alertItems.length})
-                      </h4>
-                    </div>
-                    {alertItems.length > 0 ? (
-                      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '450px', overflowY: 'auto', paddingRight: '4px' }}>
-                      {alertItems.map((item, idx) => {
-                        const isOut = item.quantity === 0;
-                        const isExpiredItem = isExpired(item.expirationDate);
-                        const isWarning = item.quantity > 0 && item.quantity <= item.threshold;
-                        
-                        let Icon = AlertTriangle;
-                        let colorVar = '--color-warning';
-                        if (isOut || isExpiredItem) {
-                          Icon = AlertCircle;
-                          colorVar = '--color-danger';
-                        }
-                        
-                        return (
-                          <li key={idx} style={{ 
-                            padding: '12px', 
-                            background: `hsl(var(${colorVar})/0.1)`, 
-                            borderLeft: `4px solid hsl(var(${colorVar}))`, 
-                            borderRadius: '0 8px 8px 0', 
-                            fontSize: '0.85rem',
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'flex-start',
-                            transition: 'all 0.2s'
-                          }}>
-                            <Icon size={16} style={{ color: `hsl(var(${colorVar}))`, flexShrink: 0, marginTop: '2px' }} />
-                            <div style={{ color: 'hsl(var(--text-secondary))', lineHeight: '1.4' }}>
-                              <strong style={{ color: 'hsl(var(--text-primary))', display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>{item.name}</strong> 
-                              {isOut && <span>⚠️ Ce produit est <strong>en rupture totale</strong>. Un réapprovisionnement urgent est requis.</span>}
-                              {isWarning && <span>Attention, le stock est <strong>critiquement bas</strong> (il ne reste que {item.quantity} unités).</span>}
-                              {isExpiredItem && <span>❌ Ce produit est <strong>périmé</strong> depuis le {item.expirationDate}. À retirer du rayon.</span>}
-                              {!isExpiredItem && isExpiringSoon(item.expirationDate) && <span>⏳ Ce produit arrive à <strong>péremption prochainement</strong> ({item.expirationDate}).</span>}
-                            </div>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'hsl(var(--text-muted))' }}>
-                      <AlertCircle size={32} style={{ opacity: 0.2, margin: '0 auto 10px' }} />
-                      <p style={{ fontSize: '0.85rem', margin: 0 }}>Aucune alerte critique.</p>
-                    </div>
-                  )}
-                </div>
-                </>
-              )}
             </div>
 
             <div className="user-profile">
@@ -412,6 +335,67 @@ function App() {
           onClose={() => setShowHistoryModal(false)}
           transactions={pharmacy.transactions || []}
         />
+      )}
+
+      {showNotifications && (
+        <div className="modal-overlay" onClick={() => setShowNotifications(false)} id="notifications-modal">
+          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '100%', padding: '2rem' }}>
+            <div className="modal-header" style={{ marginBottom: '1.5rem', borderBottom: '1px solid hsl(var(--border-color)/0.5)', paddingBottom: '1rem' }}>
+              <h3 style={{ color: 'hsl(var(--color-danger))', display: 'flex', alignItems: 'center', gap: '10px', margin: 0, fontSize: '1.25rem' }}>
+                <AlertCircle size={24} />
+                Alertes ({alertItems.length})
+              </h3>
+              <button className="modal-close" onClick={() => setShowNotifications(false)} style={{ background: 'transparent', border: 'none', color: 'hsl(var(--text-primary))', cursor: 'pointer' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            {alertItems.length > 0 ? (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
+                {alertItems.map((item, idx) => {
+                  const isOut = item.quantity === 0;
+                  const isExpiredItem = isExpired(item.expirationDate);
+                  const isWarning = item.quantity > 0 && item.quantity <= item.threshold;
+                  
+                  let Icon = AlertTriangle;
+                  let colorVar = '--color-warning';
+                  if (isOut || isExpiredItem) {
+                    Icon = AlertCircle;
+                    colorVar = '--color-danger';
+                  }
+                  
+                  return (
+                    <li key={idx} style={{ 
+                      padding: '16px', 
+                      background: `hsl(var(${colorVar})/0.1)`, 
+                      borderLeft: `4px solid hsl(var(${colorVar}))`, 
+                      borderRadius: '0 8px 8px 0', 
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      gap: '12px',
+                      alignItems: 'flex-start',
+                      transition: 'all 0.2s'
+                    }}>
+                      <Icon size={20} style={{ color: `hsl(var(${colorVar}))`, flexShrink: 0, marginTop: '2px' }} />
+                      <div style={{ color: 'hsl(var(--text-secondary))', lineHeight: '1.5' }}>
+                        <strong style={{ color: 'hsl(var(--text-primary))', display: 'block', marginBottom: '6px', fontSize: '1rem' }}>{item.name}</strong> 
+                        {isOut && <span>⚠️ Ce produit est <strong>en rupture totale</strong>. Un réapprovisionnement urgent est requis.</span>}
+                        {isWarning && <span>Attention, le stock est <strong>critiquement bas</strong> (il ne reste que {item.quantity} unités).</span>}
+                        {isExpiredItem && <span>❌ Ce produit est <strong>périmé</strong> depuis le {item.expirationDate}. À retirer du rayon.</span>}
+                        {!isExpiredItem && isExpiringSoon(item.expirationDate) && <span>⏳ Ce produit arrive à <strong>péremption prochainement</strong> ({item.expirationDate}).</span>}
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'hsl(var(--text-muted))' }}>
+                <AlertCircle size={48} style={{ opacity: 0.2, margin: '0 auto 16px' }} />
+                <p style={{ fontSize: '1rem', margin: 0 }}>Aucune alerte critique.</p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
