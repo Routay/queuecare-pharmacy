@@ -340,10 +340,10 @@ function App() {
               id="search-medicine"
             />
           </div>
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)} id="btn-add-medicine">
-            <Plus size={18} />
-            Nouvelle Entrée
-          </button>
+              <button className="btn-premium" onClick={() => setShowAddModal(true)}>
+                <Plus size={18} />
+                Nouvelle Entrée
+              </button>
         </div>
 
         <StockTable
