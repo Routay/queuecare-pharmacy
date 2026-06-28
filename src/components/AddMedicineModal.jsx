@@ -102,7 +102,7 @@ export default function AddMedicineModal({ onClose, onAdd }) {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
             <button type="button" className="btn btn-outline" onClick={onClose}>Annuler</button>
-            <button type="submit" className="btn btn-primary" id="add-medicine-submit">Ajouter</button>
+            <button type="submit" className="btn-premium" id="add-medicine-submit">Ajouter</button>
           </div>
         </form>
       </div>
