@@ -279,9 +279,20 @@ body::after {
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
+.header-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header h1,
 .page-header h2 {
   font-size: 1.75rem;
   font-weight: 700;
@@ -292,6 +303,32 @@ body::after {
 .page-header p {
   color: hsl(var(--text-secondary));
   font-size: 0.9rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all var(--transition-base);
+}
+
+.btn-icon:hover {
+  background: hsl(var(--bg-glass) / 0.5) !important;
+  color: hsl(var(--color-primary-light)) !important;
+}
+
+.btn-logout:hover {
+  color: hsl(var(--color-danger)) !important;
+  background: hsl(var(--color-danger) / 0.1) !important;
 }
 
 /* ═══════════════════════════════════════
