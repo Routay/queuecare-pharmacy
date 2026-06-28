@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Plus, LogOut, Bell, History, Download } from 'lucide-react'
+import { Search, Plus, LogOut, Bell, History, Download, AlertCircle, AlertTriangle } from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import StatCards from './components/StatCards'
 import StockTable from './components/StockTable'
