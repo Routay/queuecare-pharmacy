@@ -6,6 +6,7 @@ import StockTable from './components/StockTable'
 import AddMedicineModal from './components/AddMedicineModal'
 import TransactionHistoryModal from './components/TransactionHistoryModal'
 import PrescriptionsPanel from './components/PrescriptionsPanel'
+import SettingsPanel from './components/SettingsPanel'
 import LoginScreen from './components/LoginScreen'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
@@ -327,6 +328,10 @@ function App() {
 
         {activeTab === 'prescriptions' && (
           <PrescriptionsPanel user={user} onStockUpdate={fetchPharmacyData} />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsPanel pharmacy={pharmacy} />
         )}
       </main>
 

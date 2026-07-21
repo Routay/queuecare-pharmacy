@@ -26,7 +26,10 @@ export default function Sidebar({ user, onLogout, activeTab, onTabChange }) {
           <FileText size={20} />
           Ordonnances
         </button>
-        <button className="nav-item">
+        <button 
+          className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => onTabChange('settings')}
+        >
           <Settings size={20} />
           Paramètres
         </button>
