@@ -28,6 +28,15 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeTab, setActiveTab] = useState('stock');
 
+  const handleLogout = useCallback(() => {
+    setToken(null)
+    setUser(null)
+    localStorage.removeItem('queuecare_pharmacy_token')
+    if (token) {
+      fetch(`${API_URL}/auth/logout?token=${token}`, { method: 'POST' }).catch(e => console.error(e))
+    }
+  }, [token])
+
   // Vérifier le token au chargement
   useEffect(() => {
     const verifyToken = async () => {
@@ -49,21 +58,12 @@ function App() {
       }
     }
     verifyToken()
-  }, [token])
+  }, [token, handleLogout])
 
   const handleLogin = (newToken, userData) => {
     setToken(newToken)
     setUser(userData)
     localStorage.setItem('queuecare_pharmacy_token', newToken)
-  }
-
-  const handleLogout = () => {
-    setToken(null)
-    setUser(null)
-    localStorage.removeItem('queuecare_pharmacy_token')
-    if (token) {
-      fetch(`${API_URL}/auth/logout?token=${token}`, { method: 'POST' }).catch(e => console.error(e))
-    }
   }
 
   const fetchPharmacyData = useCallback(async () => {

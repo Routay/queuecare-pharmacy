@@ -13,6 +13,7 @@ export default function Sidebar({ user, onLogout, activeTab, onTabChange }) {
 
       <nav className="sidebar-nav">
         <button 
+          id="nav-stock"
           className={`nav-item ${activeTab === 'stock' ? 'active' : ''}`}
           onClick={() => onTabChange('stock')}
         >
@@ -20,6 +21,7 @@ export default function Sidebar({ user, onLogout, activeTab, onTabChange }) {
           Tableau de Bord
         </button>
         <button 
+          id="nav-prescriptions"
           className={`nav-item ${activeTab === 'prescriptions' ? 'active' : ''}`}
           onClick={() => onTabChange('prescriptions')}
         >
@@ -27,6 +29,7 @@ export default function Sidebar({ user, onLogout, activeTab, onTabChange }) {
           Ordonnances
         </button>
         <button 
+          id="nav-settings"
           className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => onTabChange('settings')}
         >
