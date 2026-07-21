@@ -1,23 +1,34 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Save, Shield, Bell, Key, Store } from 'lucide-react'
 
 export default function SettingsPanel({ pharmacy }) {
   const [activeSection, setActiveSection] = useState('general');
   const [saved, setSaved] = useState(false);
 
-  // Mock form state
-  const [formData, setFormData] = useState({
-    name: pharmacy?.name || '',
-    address: pharmacy?.address || '',
-    email: 'contact@pharmacie.com',
-    phone: '+221 77 123 45 67',
-    notifications: true,
-    autoOrder: false,
-    alertThreshold: 20
+  const loadSavedSettings = () => {
+    try {
+      const s = localStorage.getItem('queuecare_pharmacy_settings');
+      if (s) return JSON.parse(s);
+    } catch {}
+    return null;
+  };
+
+  const [formData, setFormData] = useState(() => {
+    const s = loadSavedSettings();
+    return s || {
+      name: pharmacy?.name || '',
+      address: pharmacy?.address || '',
+      email: 'contact@pharmacie.com',
+      phone: '+221 77 123 45 67',
+      notifications: true,
+      autoOrder: false,
+      alertThreshold: 20
+    };
   });
 
   const handleSave = (e) => {
     e.preventDefault();
+    localStorage.setItem('queuecare_pharmacy_settings', JSON.stringify(formData));
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
