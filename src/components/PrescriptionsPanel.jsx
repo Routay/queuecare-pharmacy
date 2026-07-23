@@ -3,6 +3,7 @@ import { FileText, CheckCircle, Package, User } from 'lucide-react'
 
 export default function PrescriptionsPanel({ user, pharmacyId = 1, onStockUpdate }) {
   const [prescriptions, setPrescriptions] = useState([])
+  const [activeTab, setActiveTab] = useState('pending')
   const [isLoading, setIsLoading] = useState(true)
   const [processingId, setProcessingId] = useState(null)
   const [error, setError] = useState(null)
@@ -11,10 +12,15 @@ export default function PrescriptionsPanel({ user, pharmacyId = 1, onStockUpdate
   const fetchPrescriptions = async () => {
     try {
       setIsLoading(true)
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/consultations/prescriptions?status=pending`)
+      let url = activeTab === 'ordered' 
+        ? `${import.meta.env.VITE_API_URL}/consultations/prescriptions/pharmacy/${pharmacyId}?status=ordered`
+        : `${import.meta.env.VITE_API_URL}/consultations/prescriptions?status=pending`
+
+      const res = await fetch(url)
       if (!res.ok) throw new Error("Erreur de récupération des ordonnances")
       const data = await res.json()
-      setPrescriptions(data)
+      
+      setPrescriptions(data.data || data)
       setError(null)
     } catch (err) {
       setError(err.message)
@@ -25,10 +31,9 @@ export default function PrescriptionsPanel({ user, pharmacyId = 1, onStockUpdate
 
   useEffect(() => {
     fetchPrescriptions()
-    // Poll every 10 seconds for new prescriptions
     const interval = setInterval(fetchPrescriptions, 10000)
     return () => clearInterval(interval)
-  }, [])
+  }, [activeTab])
 
   const handleDeliver = async (prescription) => {
     setProcessingId(prescription.id)
@@ -81,8 +86,24 @@ export default function PrescriptionsPanel({ user, pharmacyId = 1, onStockUpdate
   return (
     <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
       <div className="page-header" style={{ marginBottom: '2rem' }}>
-        <h2>Ordonnances en attente</h2>
-        <p>Gérez les prescriptions numériques envoyées par les médecins.</p>
+        <h2>Gestion des Ordonnances</h2>
+        <p>Gérez les prescriptions médicales et les commandes des patients.</p>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+          <button 
+            className={`btn ${activeTab === 'pending' ? 'btn-primary' : ''}`}
+            style={activeTab !== 'pending' ? { background: 'hsl(var(--bg-primary))', color: 'hsl(var(--text-primary))' } : {}}
+            onClick={() => setActiveTab('pending')}
+          >
+            Toutes les ordonnances
+          </button>
+          <button 
+            className={`btn ${activeTab === 'ordered' ? 'btn-primary' : ''}`}
+            style={activeTab !== 'ordered' ? { background: 'hsl(var(--bg-primary))', color: 'hsl(var(--text-primary))' } : {}}
+            onClick={() => setActiveTab('ordered')}
+          >
+            Commandes Reçues
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -144,6 +165,14 @@ export default function PrescriptionsPanel({ user, pharmacyId = 1, onStockUpdate
               {prescription.notes && (
                 <div style={{ padding: '0.75rem', background: 'hsl(var(--color-warning)/0.05)', borderLeft: '3px solid hsl(var(--color-warning))', borderRadius: '0 8px 8px 0', fontSize: '0.85rem', color: 'hsl(var(--text-secondary))' }}>
                   <strong>Notes :</strong> {prescription.notes}
+                </div>
+              )}
+
+              {prescription.status === 'ordered' && (
+                <div style={{ padding: '0.75rem', background: 'hsl(var(--color-primary)/0.05)', borderLeft: '3px solid hsl(var(--color-primary))', borderRadius: '0 8px 8px 0', fontSize: '0.85rem', color: 'hsl(var(--text-primary))', marginTop: '0.5rem' }}>
+                  <strong>Commande Patient :</strong><br/>
+                  Mode: {prescription.deliveryMethod === 'delivery' ? 'Livraison à domicile' : 'Retrait sur place'}
+                  {prescription.deliveryAddress && <div>Adresse: {prescription.deliveryAddress}</div>}
                 </div>
               )}
 
